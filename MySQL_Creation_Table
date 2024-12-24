@@ -1,0 +1,18 @@
+CREATE DATABASE michelin_IAM;
+USE projet_michelin;
+
+CREATE TABLE users (
+    last_name VARCHAR(100),
+    first_name VARCHAR(100),
+    email VARCHAR(100),
+    username VARCHAR(100) PRIMARY KEY,
+    age VARCHAR(100),
+    job title VARCHAR(100),
+);
+
+LOAD DATA INFILE ' '
+INTO TABLE users
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
