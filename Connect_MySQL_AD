@@ -1,0 +1,16 @@
+#1. Configurer un plugin LDAP pour MySQL
+INSTALL PLUGIN authentication_ldap_simple SONAME 'authentication_ldap_simple.so';
+[mysqld]
+authentication_ldap_simple_server_host = "AD_SERVER_HOST"
+authentication_ldap_simple_server_port = 389
+authentication_ldap_simple_bind_base_dn = "dc=example,dc=com"
+authentication_ldap_simple_user_search_attr = "sAMAccountName"
+authentication_ldap_simple_bind_root_dn = "CN=Admin,CN=Users,DC=example,DC=com"
+authentication_ldap_simple_bind_root_pwd = "YourPassword"
+
+#2. Configurer un compte MySQL avec authentification LDAP
+CREATE USER 'ldap_user'@'%' IDENTIFIED WITH authentication_ldap_simple BY 'password';
+GRANT ALL PRIVILEGES ON database_name.* TO 'ldap_user'@'%';
+
+3. 3. Vérifier la connectivité LDAP entre MySQL et AD
+ldapsearch -x -H ldap://ad.example.com -D "CN=Admin,CN=Users,DC=example,DC=com" -w YourPassword -b "DC=example,DC=com" "(sAMAccountName=*)"
