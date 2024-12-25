@@ -1,0 +1,36 @@
+# Définir les paramètres
+$groupName = "Collaborateur_Monde"  # Name of group
+$ouPath = "OU=Users,DC=example,DC=com"  # Organization Unit where users are created
+$checkInterval = 60  # Seconds necessary to check the creation of users
+
+# To add user in a group
+function Add-UserToGroup {
+    param (
+        [string]$Jbrossard@Inetum220.onmicrosoft.com,
+        [string]$Collaborateur_Monde
+    )
+
+    # To retrieve the groupe
+    $group = Get-ADGroup -Filter {Name -eq $Collaborateur_Monde} -ErrorAction Stop
+
+}
+
+# To check the creation of new users
+Write-Host "Beginning of the process in OU $ouPath..." -ForegroundColor Green
+
+while ($true) {
+    try {
+        # To retrieve users created in the last 60 seconds
+        $newUsers = Get-ADUser -Filter {whenCreated -gt (Get-Date).AddSeconds(-$60)} -SearchBase $ouPath -Properties whenCreated
+
+        foreach ($user in $newUsers) {
+            # To add user in group
+            Add-UserToGroup -userName $Jbrossard@Inetum220.onmicrosoft.com.SamAccountName -groupName $Collaborateur_Monde
+        }
+    } catch {
+        Write-Host "Error : $_" -ForegroundColor Red
+    }
+
+    # To wait on the next verification
+    Start-Sleep -Seconds $checkInterval
+}
