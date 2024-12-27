@@ -1,4 +1,8 @@
+Consideration:
 Please note that I use macOS and my PowerShell commands are different than Windows
+The account that does this type of action need the correct authorization
+Check whether your email account enables sending emails via SMTP
+
 
 #To retrieve a list of users with incomplete information
 Get-AzADUser | Where-Object { -not $_.Mail } | Select-Object ObjectId, UserPrincipalName, DisplayName | Export-Csv -Path "/Users/Users_Incomplete.csv" -NoTypeInformation
