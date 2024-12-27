@@ -1,0 +1,28 @@
+Consideration:
+Please note that I use macOS and my PowerShell commands are different than Windows
+The account that does this type of actions need the correct authorization
+Check whether your email account enables sending emails via SMTP
+
+
+#Defne the time to be considered to retrieve the information
+$StartDate = (Get-Date).AddDays(-7).ToString("yyyy-MM-ddTHH:mm:ssZ")
+
+#To retrieve the list of logs
+$SignInLogs = Get-AzureADAuditSignInLogs -Filter "createdDateTime ge $StartDate"
+
+# Email parameters
+$smtpServer = "smtp.gmail.com"
+$smtpPort = 587
+$smtpUser = "<ton_email>@gmail.com"
+$smtpPass = "<ton_mot_de_passe>"
+$fromEmail = "<ton_email>@gmail.com"
+$toEmail = "<email_destinataire>"
+
+# Message to insert in the email sent
+$subject = "Azure AD_User_Inconsistent Data_Modification"
+$body = "Hello, here is the list of users with missing information during the past 7 days"
+
+# To put the reports attached in the email
+Send-MailMessage -SmtpServer $smtpServer -Port $smtpPort -Credential (New-Object System.Management.Automation.PSCredential($smtpUser, (ConvertTo-SecureString $smtpPass -AsPlainText -Force))) `
+    -From $fromEmail -To $toEmail -Subject $subject -Body $body `
+    -Attachments "/Users/Users_Incomplete.csv" -UseSsl
