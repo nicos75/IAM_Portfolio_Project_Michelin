@@ -1,60 +1,15 @@
-# Variables de configuration
-$days = 7  # Période des rapports (en jours)
-$reportFilePath = "C:\ADReports\AD_Report_$(Get-Date -Format 'yyyyMMdd').csv"
-$smtpServer = "smtp.Inetum220.onmicrosoft.com"  # Adresse du serveur SMTP
-$fromEmail = "super.admin@Inetum220.onmicrosoft.com"  # Adresse email de l'expéditeur
-$toEmail = "NicolasSpaniol@Inetum220.onmicrosoft.com"  # Adresse email du destinataire
-$subject = "Rapport AD : Comptes créés, modifiés, supprimés et incomplets"
+#To retrive a list of users created and modified
+Get-AzADUser | Select-Object ObjectId, UserPrincipalName, DisplayName, DirSyncEnabled, LastModifiedDateTime | Export-Csv -Path "/Users/elab/Downloads/Users_Created_Updated.csv" -NoTypeInformation
 
-# Créer un dossier pour stocker les rapports
-if (-not (Test-Path "C:\ADReports")) {
-    New-Item -ItemType Directory -Path "C:\ADReports"
+#To retrieve a list of users with incomplete information
+Get-AzADUser | Where-Object { -not $_.Mail } | Select-Object ObjectId, UserPrincipalName, DisplayName | Export-Csv -Path "/Users/elab/Downloads/Users_Incomplete.csv" -NoTypeInformation
+
+#To retrieve a list of users who were suppressed, via the creation of the API Microsoft Graph
+$uri = "https://graph.microsoft.com/v1.0/directory/deletedItems/microsoft.graph.user"
+
+$headers = @{
+    "Authorization" = "Bearer $accessToken"
 }
 
-# 1. Récupérer les comptes créés récemment
-$createdAccounts = Get-ADUser -Filter { whenCreated -ge (Get-Date).AddDays(-$days) } -Properties whenCreated | Select-Object Name, SamAccountName, whenCreated
-
-# 2. Récupérer les comptes modifiés récemment
-$modifiedAccounts = Get-ADUser -Filter { whenChanged -ge (Get-Date).AddDays(-$days) } -Properties whenChanged | Select-Object Name, SamAccountName, whenChanged
-
-# 3. Récupérer les comptes supprimés (si la corbeille AD est activée)
-$deletedAccounts = Get-ADObject -Filter { isDeleted -eq $true -and whenChanged -ge (Get-Date).AddDays(-$days) } -IncludeDeletedObjects | Select-Object Name, LastKnownParent, whenChanged
-
-# 4. Récupérer les comptes avec des informations manquantes
-$incompleteAccounts = Get-ADUser -Filter * -Properties EmailAddress, MobilePhone, Office location, Department | Where-Object {
-    ($_."EmailAddress" -eq $null) -or ($_."MobilePhone" -eq $null) -or ($_."Office location" -eq $null) -or ($_."Department" -eq $null)
-} | Select-Object Name, SamAccountName, EmailAddress, MobilePhone, Office location, Department
-
-# 5. Générer le rapport CSV
-$reportData = @(
-    @{ Section = "Comptes créés" }
-    $createdAccounts
-    @{ Section = "Comptes modifiés" }
-    $modifiedAccounts
-    @{ Section = "Comptes supprimés" }
-    $deletedAccounts
-    @{ Section = "Comptes incomplets" }
-    $incompleteAccounts
-)
-
-# Exporter les données en CSV
-$reportData | Export-Csv -Path $reportFilePath -NoTypeInformation -Encoding UTF8
-Write-Host "Rapport généré : $reportFilePath"
-
----
-
-# Envoyer le rapport par email
-try {
-    # Paramètres de l'email
-    $emailBody = "Bonjour,Veuillez trouver ci-joint le rapport des comptes Active Directory créés, modifiés, supprimés et incomplets pour les 7 derniers jours"
-    Send-MailMessage -From $fromEmail `
-                     -To $toEmail `
-                     -Subject $subject `
-                     -BodyAsHtml `
-                     -Body $emailBody `
-                     -SmtpServer $smtpServer `
-                     -Attachments $reportFilePath `
-    Write-Host "Email envoyé avec succès à $toEmail." -ForegroundColor Green
-} catch {
-    Write-Host "Erreur lors de l'envoi de l'email : $_" -ForegroundColor Red
-}
+$response = Invoke-RestMethod -Uri $uri -Method Get -Headers $headers
+$response.value | Select-Object id, userPrincipalName, displayName | Export-Csv -Path "/Users/elab/Downloads/Users_Deleted.csv" -NoTypeInformation
