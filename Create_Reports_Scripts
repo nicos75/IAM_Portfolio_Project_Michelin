@@ -1,8 +1,10 @@
-#To retrive a list of users created and modified
-Get-AzADUser | Select-Object ObjectId, UserPrincipalName, DisplayName, DirSyncEnabled, LastModifiedDateTime | Export-Csv -Path "/Users/elab/Downloads/Users_Created_Updated.csv" -NoTypeInformation
+Please note that I use macOS and my PowerShell commands are different than Windows
+
+#To retrieve a list of users created and modified
+Get-AzADUser | Select-Object ObjectId, UserPrincipalName, DisplayName, DirSyncEnabled, LastModifiedDateTime | Export-Csv -Path "/Users/Users_Created_Updated.csv" -NoTypeInformation
 
 #To retrieve a list of users with incomplete information
-Get-AzADUser | Where-Object { -not $_.Mail } | Select-Object ObjectId, UserPrincipalName, DisplayName | Export-Csv -Path "/Users/elab/Downloads/Users_Incomplete.csv" -NoTypeInformation
+Get-AzADUser | Where-Object { -not $_.Mail } | Select-Object ObjectId, UserPrincipalName, DisplayName | Export-Csv -Path "/Users/Users_Incomplete.csv" -NoTypeInformation
 
 #To retrieve a list of users who were suppressed, via the creation of the API Microsoft Graph
 $uri = "https://graph.microsoft.com/v1.0/directory/deletedItems/microsoft.graph.user"
@@ -12,4 +14,4 @@ $headers = @{
 }
 
 $response = Invoke-RestMethod -Uri $uri -Method Get -Headers $headers
-$response.value | Select-Object id, userPrincipalName, displayName | Export-Csv -Path "/Users/elab/Downloads/Users_Deleted.csv" -NoTypeInformation
+$response.value | Select-Object id, userPrincipalName, displayName | Export-Csv -Path "/Users/Users_Deleted.csv" -NoTypeInformation
