@@ -3,18 +3,12 @@ Please note that I use macOS and my PowerShell commands are different than Windo
 #To retrieve a list of users created and modified
 Get-AzADUser | Select-Object ObjectId, UserPrincipalName, DisplayName, DirSyncEnabled, LastModifiedDateTime | Export-Csv -Path "/Users/Users_Created_Updated.csv" -NoTypeInformation
 
-#To retrieve a list of users with incomplete information
-Get-AzADUser | Where-Object { -not $_.Mail } | Select-Object ObjectId, UserPrincipalName, DisplayName | Export-Csv -Path "/Users/Users_Incomplete.csv" -NoTypeInformation
-
 #To retrieve a list of users who were suppressed, via the creation of the API Microsoft Graph
 $uri = "https://graph.microsoft.com/v1.0/directory/deletedItems/microsoft.graph.user"
 
 $headers = @{
     "Authorization" = "Bearer $accessToken"
 }
-
-$response = Invoke-RestMethod -Uri $uri -Method Get -Headers $headers
-$response.value | Select-Object id, userPrincipalName, displayName | Export-Csv -Path "/Users/Users_Deleted.csv" -NoTypeInformation
 
 # Email parameters
 $smtpServer = "smtp.gmail.com"
@@ -25,10 +19,10 @@ $fromEmail = "<ton_email>@gmail.com"
 $toEmail = "<email_destinataire>"
 
 # MEssage to insert in the email sent
-$subject = "Azure AD_User_Creation_Inconsistent Data_Modification"
-$body = "Hello, here is the list of users who were created and modified, and incomplete during the past 7 days"
+$subject = "Azure AD_User_Creation_Modification"
+$body = "Hello, here is the list of users who were created and modified during the past 7 days"
 
 # To put the reports attached in the email
 Send-MailMessage -SmtpServer $smtpServer -Port $smtpPort -Credential (New-Object System.Management.Automation.PSCredential($smtpUser, (ConvertTo-SecureString $smtpPass -AsPlainText -Force))) `
     -From $fromEmail -To $toEmail -Subject $subject -Body $body `
-    -Attachments "/Users/Users_Created_Updated.csv", "/Users/Users_Incomplete.csv" -UseSsl
+    -Attachments "/Users/Users_Created_Updated.csv" -UseSsl
